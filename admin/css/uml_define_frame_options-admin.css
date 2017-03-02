@@ -2,3 +2,18 @@
  * All of the CSS for your admin-specific functionality should be
  * included in this file.
  */
+
+a{
+    cursor: pointer;
+    text-decoration: none;
+}
+
+#url{
+    width: 90%;
+}
+
+.inactive_button{
+    cursor: default;
+    border:none;
+    user-select: none;
+}

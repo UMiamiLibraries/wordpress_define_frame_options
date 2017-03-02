@@ -20,7 +20,7 @@
  * @subpackage Plugin_Name/public
  * @author     Your Name <email@example.com>
  */
-class Plugin_Name_Public {
+class Uml_Define_Frame_Options_Public {
 
 	/**
 	 * The ID of this plugin.

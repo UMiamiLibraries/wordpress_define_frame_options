@@ -21,7 +21,7 @@
  * @subpackage Plugin_Name/includes
  * @author     Your Name <email@example.com>
  */
-class Plugin_Name_Loader {
+class Uml_Define_Frame_Options_Loader {
 
 	/**
 	 * The array of actions registered with WordPress.
