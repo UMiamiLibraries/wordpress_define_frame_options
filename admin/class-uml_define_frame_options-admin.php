@@ -98,6 +98,10 @@ class Uml_Define_Frame_Options_Admin {
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/uml_define_frame_options-admin.js', array( 'jquery' ), $this->version, false );
 
+        wp_localize_script( $this->plugin_name, 'admin_url', array(
+            'ajax_url' => admin_url( "admin-ajax.php")
+        ));
+
 	}
 
     function show_in_admin_menu() {
@@ -118,22 +122,65 @@ class Uml_Define_Frame_Options_Admin {
     }
 
     function uml_set_frame_options_header() {
-        global $wpdb;
-        $query = $wpdb->get_results( 'SELECT * FROM `uml_define_frame_options`');
+            global $wpdb;
+            $query = $wpdb->get_results( 'SELECT * FROM `uml_define_frame_options`');
 
-        if ($query){
-            $option = $query[0]->option;
+            if ($query){
+                $option = $query[0]->option;
 
-            if ($option === 'ALLOW-FROM'){
-                $option = $option . ' ' . $query[0]->allow_from;
+                if ($option) {
+                    $is_ie = false;
+
+                    $trusted_site_url = $query[0]->allow_from;
+                    if (isset($_SERVER['HTTP_USER_AGENT']) && (strpos($_SERVER['HTTP_USER_AGENT'], 'Trident') !== false)) {
+                        $is_ie = true;
+                    }
+
+                    if (stripos($query[0]->allow_from, "self") !== false) {
+                        $trusted_site_url = str_replace("self", "'self'", $query[0]->allow_from);
+                    }
+
+                    if (strpos($option, 'ALLOW-FROM') !== false) {
+                            $trusted_site_url = "ALLOW-FROM ".$trusted_site_url;
+                    } elseif (strpos($option, 'SAMEORIGIN') !== false) {
+                        if (!$is_ie){
+                            $trusted_site_url = " 'self'";
+                        }else{
+                            $trusted_site_url = "SAMEORIGIN";
+                        }
+                    } else {
+                        if (!$is_ie) {
+                            $trusted_site_url = " 'none'";
+                        }else{
+                            $trusted_site_url = " DENY";
+                        }
+                    }
+                    if ($is_ie) {
+                        if (isset($_SERVER['HTTP_REFERER'])){
+                            $request_host = $_SERVER['HTTP_REFERER'];
+                            $request_host=parse_url($request_host)["host"];
+                        }else{
+                            $request_host = $_SERVER['HTTP_HOST'];
+                        }
+                        $protocol = 'http://';
+                        if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
+                            $protocol = 'https://';
+                        }
+                        if (strpos($trusted_site_url, $request_host) !== false) {
+                            $trusted_site_url = 'ALLOW-FROM '.$protocol.$request_host;
+                        }
+                        if (strpos($trusted_site_url, 'self') !== false) {
+                            $trusted_site_url = 'SAMEORIGIN';
+                        }
+                        @header('X-Frame-Options: ' . $trusted_site_url);
+                    } else {
+                        if (strpos($option, 'ALLOW-FROM') !== false) {
+                            $trusted_site_url = str_replace("ALLOW-FROM", "", $trusted_site_url);
+                        }
+                        @header('Content-Security-Policy: frame-ancestors ' . $trusted_site_url);
+                    }
+                }
             }
-
-            if(stripos($_SERVER['HTTP_USER_AGENT'],"Chrome")!==false){
-                @header( 'Content-Security-Policy: frame-ancestors ' . $query[0]->allow_from);
-            }else{
-                @header( 'X-Frame-Options: ' . $option);
-            }
-        }
     }
 
     function save_option(){

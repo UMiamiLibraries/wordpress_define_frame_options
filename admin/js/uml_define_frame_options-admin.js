@@ -1,7 +1,7 @@
 (function( $ ) {
 	'use strict';
 
-    $(document).ready(function () {
+    $(window).load(function () {
         $.post(admin_url.ajax_url, { action: 'get_info'}).done(function(data) {
 			var info = JSON.parse(data);
 
